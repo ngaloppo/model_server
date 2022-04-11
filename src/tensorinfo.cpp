@@ -326,6 +326,21 @@ std::string TensorInfo::tensorShapeToString(const tensorflow::TensorShapeProto& 
     return oss.str();
 }
 
+std::string TensorInfo::tensorShapeToString(const google::protobuf::RepeatedField<int64_t>& shape) {
+    std::ostringstream oss;
+    oss << "(";
+    size_t i = 0;
+    if (shape.size() > 0) {
+        for (; i < shape.size() - 1; i++) {
+            oss << shape[i] << ",";
+        }
+        oss << shape[i];
+    }
+    oss << ")";
+
+    return oss.str();
+}
+
 std::shared_ptr<TensorInfo> TensorInfo::getUnspecifiedTensorInfo() {
     return std::make_shared<TensorInfo>("", Precision::UNDEFINED, Shape{});
 }
