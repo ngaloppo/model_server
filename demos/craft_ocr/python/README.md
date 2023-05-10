@@ -44,6 +44,9 @@ Download the file `craft_mlt_25k.pth` as instructed above. Then, export to
 OpenVINO format with the provided export script:
 
 ```bash
+pip -m venv craft
+source craft/bin/activate
+pip install -r requirements.txt
 python export.py craft_mlt_25k.pth
 ```
 This will create two files called `craft.xml` and `craft.bin` in the same folder. 
