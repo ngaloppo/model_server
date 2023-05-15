@@ -23,7 +23,7 @@ It includes the following nodes:
   determined by the number of detected boxes according to the configured
   criteria. All operations on the images employ OpenCV libraries which are
   preinstalled in the OVMS. Learn more about the [craft_ocr custom
-  node](src/custom_nodes/craft_ocr)
+  node](/src/custom_nodes/craft_ocr)
 - Response - the output of the whole pipeline is the recognized `image_texts`.
 
 ## Preparing the Models
