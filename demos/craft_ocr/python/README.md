@@ -62,7 +62,7 @@ Custom nodes are loaded into OVMS as dynamic library implementing OVMS API from 
 It can use OpenCV libraries included in OVMS or it could use other thirdparty components.
 
 The custom node `craft_ocr` can be built inside a docker container via the following procedure:
-- go to the directory with custom node examples [src/custom_node](src/custom_nodes)
+- go to the directory with custom node examples [src/custom_nodes](../../../src/custom_nodes/). The implementation is in [src/custom_nodes/craft_ocr](../../../src/custom_nodes/craft_ocr/).
 - run `make` command:
 
 ```bash
@@ -143,3 +143,18 @@ Below is the exemplary input image.
 The custom node generates the following text images retrieved from the original input to CRNN model:
 ![image](craft_table.jpg)
 
+We can also benchmark if needed using `rp_craft_ocr.py`:
+
+```bash
+mkdir results
+
+python3 rp_craft_ocr.py --grpc_port 9000 --image_input_path demo_images/input.jpg --pipeline_name detect_text_images --text_images_output_name text_images --text_images_save_path ./results/ --image_layout NCHW --image_size 768 --bench_time 20
+
+Starting benchmarking for 20 sec...
+Output: name[text_images]
+    numpy => shape[(9, 1, 1, 32, 128)] data[float32]
+Num iterations: 95
+Avg Preprocessing Time: 0.0405 sec
+Avg Latency: 0.1703 sec, p99: 0.2377 sec, p95: 0.1868 sec, FPS: 5.87
+Post processing time: 0.0038 sec
+```
