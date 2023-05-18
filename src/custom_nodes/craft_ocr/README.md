@@ -7,7 +7,7 @@ original input image based on the detected boxes. Each image in the output will
 be resized to the predefined target size to fit the next inference model in the
 DAG pipeline.
 
-**Note** An example [configuration file](demos/optical_character_recognition/python/config.json) is available in the [CRAFT OCR demo](demos/optical_character_recognition/python/).
+**Note** An example [configuration file](../../../demos/craft_ocr/python/config.json) is available in the [CRAFT OCR demo](../../../demos/craft_ocr/python/).
 
 # Building the custom node library
 
