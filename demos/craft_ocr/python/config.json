@@ -11,6 +11,12 @@
                     "PERFORMANCE_HINT": "LATENCY"
                 }
             }
+        },
+        {
+            "config": {
+                "name": "text-recognition",
+                "base_path": "/OCR/text-recognition"
+            }
         }
     ],
     "custom_node_library_config_list": [
@@ -69,11 +75,26 @@
                         {"data_item": "text_images",
                          "alias": "text_images"}
                     ]
+                },
+                {
+                    "name": "text-recognition_node",
+                    "model_name": "text-recognition",
+                    "type": "DL model",
+                    "inputs": [
+                        {"imgs": {"node_name": "extract_node",
+                            "data_item": "text_images"}}
+                    ],
+                    "outputs": [
+                        {"data_item": "logits",
+                            "alias": "texts"}
+                    ]
                 }
             ],
             "outputs": [
                 {"text_images": {"node_name": "extract_node",
-                         "data_item": "text_images"}}
+                         "data_item": "text_images"}},
+                {"texts": {"node_name": "text-recognition_node",
+                         "data_item": "texts"}}
             ]
         }
     ]
