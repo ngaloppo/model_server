@@ -17,10 +17,10 @@
 
 #include <map>
 
+#include "capi_frontend/inferencerequest.hpp"
+#include "capi_frontend/inferencetensor.hpp"
 #include "deserialization.hpp"
 #include "executingstreamidguard.hpp"
-#include "inferencerequest.hpp"
-#include "inferencetensor.hpp"
 #include "modelinstance.hpp"
 #include "modelinstanceunloadguard.hpp"
 #include "modelmanager.hpp"
@@ -115,9 +115,18 @@ std::map<std::string, shape_t> getRequestShapes(const InferenceRequest* request)
     return request->getRequestShapes();
 }
 
-template <>
-bool useSharedOutputContent(const ::inference::ModelInferRequest* request) {
-    return request->raw_input_contents().size() > 0;
+bool useSharedOutputContentFn(const tensorflow::serving::PredictRequest* request) {
+    // does not apply for TFS frontend
+    return false;
+}
+
+bool useSharedOutputContentFn(const ::KFSRequest* request) {
+    return true;
+}
+
+bool useSharedOutputContentFn(const InferenceRequest* request) {
+    // does not apply for C-API frontend
+    return false;
 }
 
 }  // namespace ovms
