@@ -113,6 +113,10 @@ cc_shared_library(
         "@oneTBB//:__subpackages__",
         "@com_github_glog_glog//:__subpackages__",
         "@com_github_gflags_gflags//:__subpackages__",
+        "@XNNPACK//:__subpackages__",
+        "@pthreadpool//:__subpackages__",
+        "@FXdiv//:__subpackages__",
+        "@FP16//:__subpackages__",
     ] + select({
         "//conditions:default": [
             "@mediapipe//:__subpackages__",
@@ -141,6 +145,24 @@ mediapipe_proto_library(
         "@mediapipe//mediapipe/framework:calculator_options_proto",
         "@mediapipe//mediapipe/framework:calculator_proto",
     ],
+)
+
+cc_library(
+    name = "ovms_header",
+    hdrs = ["ovms.h"],
+    srcs = [ "ovms.h" ],
+    deps = [      
+        ],
+    local_defines = [
+    ],
+    copts = [
+        ],
+    visibility = [
+        "//visibility:public",
+    ],
+    linkopts = [
+    ],
+    alwayslink = 1,
 )
 
 cc_library(
@@ -377,6 +399,10 @@ cc_library(
         ] + select({
             "//conditions:default": [
                 "//src:ovmscalculatoroptions_cc_proto", # ovmscalculatoroptions_proto - just mediapipe stuff with mediapipe_proto_library adding nonvisible target
+                "@mediapipe_calculators//:mediapipe_calculators", # Need this dependencies here because we use ovms/src - cannot add in ovms_dependencies because we copy src directory later in Dockerfile
+                "@mediapipe//mediapipe/graphs/holistic_tracking:holistic_tracking_to_render_data",
+                "@mediapipe//mediapipe/calculators/tensor:image_to_tensor_calculator",
+                "@mediapipe//mediapipe/modules/holistic_landmark:holistic_landmark_cpu",
             ],
             "//src:disable_mediapipe" : [],
         }),
@@ -711,6 +737,7 @@ cc_test(
         "test/tensor_conversion_test.cpp",
         "test/c_api_test_utils.hpp",
         "test/c_api_tests.cpp",
+        "test/c_api_stress_tests.cpp",
         "test/custom_loader_test.cpp",
         "test/custom_node_output_allocator_test.cpp",
         "test/custom_node_buffersqueue_test.cpp",
@@ -777,6 +804,7 @@ cc_test(
         "test/tensorutils_test.cpp",
         "test/test_utils.cpp",
         "test/test_utils.hpp",
+        "test/stress_test_utils.hpp",
         "test/threadsafequeue_test.cpp",
         "test/unit_tests.cpp",
         ] + select({

@@ -25,8 +25,11 @@
 #include "../ovms.h"  // NOLINT
 #include "../stringutils.hpp"
 #include "../tfs_frontend/tfs_utils.hpp"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "mediapipe/framework/calculator_framework.h"
 #include "mediapipe/framework/port/canonical_errors.h"
+#pragma GCC diagnostic pop
 #include "src/mediapipe_calculators/modelapiovmsinferencecalculator.pb.h"
 // here we need to decide if we have several calculators (1 for OVMS repository, 1-N inside mediapipe)
 // for the one inside OVMS repo it makes sense to reuse code from ovms lib
@@ -40,8 +43,8 @@ namespace {
         if (err != nullptr) {                                                               \
             uint32_t code = 0;                                                              \
             const char* msg = nullptr;                                                      \
-            OVMS_StatusGetCode(err, &code);                                                 \
-            OVMS_StatusGetDetails(err, &msg);                                               \
+            OVMS_StatusCode(err, &code);                                                    \
+            OVMS_StatusDetails(err, &msg);                                                  \
             LOG(INFO) << "Error encountred in OVMSCalculator:" << msg << " code: " << code; \
             OVMS_StatusDelete(err);                                                         \
             RET_CHECK(err == nullptr);                                                      \
@@ -124,7 +127,7 @@ public:
                 // TODO decide which will be easier to migrating later
                 // using OV tensor by default will be more performant
                 // but harder to migrate
-                /*    
+                /*
                 cc->Outputs().Tag(tag).Set<tensorflow::Tensor>();
                 */
                 LOG(INFO) << "setting output tag:" << tag << " to OVTensor";
