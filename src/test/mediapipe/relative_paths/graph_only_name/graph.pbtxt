@@ -13,31 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-input_stream: "TFTENSOR_1:in"
-output_stream: "TFTENSOR:out"
+input_stream: "in"
+output_stream: "out"
 node {
-  calculator: "OpenVINOModelServerSessionCalculator"
-  output_side_packet: "SESSION:session"
+  calculator: "OVMSOVCalculator"
+  input_stream: "B:in"
+  output_stream: "A:out"
   node_options: {
-    [type.googleapis.com / mediapipe.OpenVINOModelServerSessionCalculatorOptions]: {
-      servable_name: "dummy"
-      servable_version: "1"
-    }
-  }
-}
-node {
-  calculator: "OpenVINOInferenceCalculator"
-  input_side_packet: "SESSION:session"
-  input_stream: "TFTENSOR_B:in"
-  output_stream: "TFTENSORA:out"
-  node_options: {
-    [type.googleapis.com / mediapipe.OpenVINOInferenceCalculatorOptions]: {
+        [type.googleapis.com / mediapipe.OVMSCalculatorOptions]: {
+          servable_name: "dummy"
+          servable_version: "1"
           tag_to_input_tensor_names {
-            key: "TFTENSOR_B"
+            key: "B"
             value: "b"
           }
           tag_to_output_tensor_names {
-            key: "TFTENSORA"
+            key: "A"
             value: "a"
           }
         }

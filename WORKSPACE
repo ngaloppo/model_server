@@ -89,7 +89,7 @@ http_archive(
 git_repository(
     name = "mediapipe",
     remote = "https://github.com/openvinotoolkit/mediapipe",
-    commit = "ac9ff003cd735f96a2e5501e32b2c941f6d4543d", # Updated CAPI calls (#21)
+    commit = "e45601452e53f2afca9fbd18c2f303b034ec21f1", # Static analysis #2 (#29)
 )
 
 # DEV mediapipe 1 source - adjust local repository path for build
@@ -213,6 +213,7 @@ http_archive(
         # Diff is generated with a script, don't update it manually.
         "@mediapipe//third_party:org_tensorflow_custom_ops.diff",
         "tf.patch",
+        "tf_graph_info_multilinecomment.patch",
     ],
     patch_args = [
         "-p1",
