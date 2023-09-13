@@ -86,6 +86,8 @@ The original pretrained STR model is stored here in Pytorch format, as instructe
 Clone our fork of the STR GitHub repository and export the model to IR. See [README-OpenVINO](https://github.com/ravi9/deep-text-recognition-benchmark/blob/master/README-OpenVINO.md).
 
 ```bash
+source deactivate # from craft venv created before.
+
 # Install Python 3.8 in a virtual environment (e.g. using pyenv or conda).
 conda create -n deeptext python=3.8 -y
 #  After installing, activate conda env
@@ -217,7 +219,7 @@ python3 craft_ocr.py \
 Sample Output:
 ```bash
 # Sample output
-Pipeline: detect_text_images took 1.388 seconds 
+Prepared input in NHWC, resize_to_shape:768, img_resized shape: (1, 768, 768, 3)
 
 Output: name[text_images]
     numpy => shape[(9, 1, 1, 32, 100)] data[float32]
@@ -235,6 +237,10 @@ detection_id    predicted_labels                confidence_score
          6:     server                          0.9998
          7:     2021                            0.9981
          8:     rotation                        0.9901
+
+Preprocessing Time (input prep): 0.044 sec
+Pipeline: detect_text_images (CRAFT + craft_ocr custom node + STR): 0.668 seconds
+Post processing time (decoding STR model output): 0.029 sec
 ```
 
 Below is the exemplary [input image](demo_images/input.jpg).
@@ -264,6 +270,10 @@ python3 craft_ocr_bench.py \
 ```bash
 # Sample Output
 Starting benchmarking for 20 sec...
+.
+.
+.
+Prepared input in NHWC, resize_to_shape:768, img_resized shape: (1, 768, 768, 3)
 Output: name[text_images]
     numpy => shape[(9, 1, 1, 32, 100)] data[float32]
 Output: name[texts]
@@ -280,10 +290,12 @@ detection_id    predicted_labels                confidence_score
          6:     server                          0.9998
          7:     2021                            0.9981
          8:     rotation                        0.9901
+
 Num iterations: 31
-Avg Preprocessing Time: 0.0199 sec
-Avg Latency: 0.6291 sec, p99: 0.7067 sec, p95: 0.6683 sec, FPS: 1.59
-Post processing time: 0.0310 sec
+Benchmark Time:  20 sec
+Avg Preprocessing Time (input prep): 0.0193 sec
+Avg Latency (CRAFT + craft_ocr custom node + STR ): 0.6414 sec, p99: 0.7011 sec, p95: 0.6848 sec, FPS: 1.56
+Post processing time (decoding STR model output): 0.0287 sec
 ```
 
 ##  Benchmark using OVMS Benchmark Client
@@ -310,7 +322,7 @@ docker run --rm --network host benchmark_client -a localhost -r 30002 --list_mod
 Run benchmark client. There will be a lot of console output. 
 
 - For FPS, see `worker: window_brutto_frame_rate`.
-- For mean latency, see `worker: window_mean_latency`
+- For mean latency, see `worker: window_mean_latency`.
 - The statistics for worker.1, worker.2, … are for single-process workers and `window_*` statistics are  combined for all workers. The parameter `-c 16` means concurrency of 16 (16 parallel workers sending requests to the OVMS)
 - The other parameters are : warmup `-u 5`; limit window for measurements  `-w 10`; total duration of the benchmark `-t 20`. All are in seconds.
 - We are mounting `input.jpg` to override `road1.jpg` which is used when `--data vehicle-jpeg` is passed. This will benchmark using the  `input.jpg`.

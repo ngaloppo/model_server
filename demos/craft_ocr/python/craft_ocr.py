@@ -82,11 +82,9 @@ def prepare_img_input_in_nchw_format(request, name, path, resize_to_shape):
     img = imgproc.loadImage(path)
     # # resize
     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(img, resize_to_shape, interpolation=cv2.INTER_LINEAR, mag_ratio=1)
-
     # img =  cv2.imread(path)
     # img_resized = cv2.resize(img, dsize=(resize_to_shape, resize_to_shape), interpolation=cv2.INTER_AREA)
     # img_resized = img_resized.astype(np.float32)  # Convert to FP32
-    
     # Normalize the image (if needed)
     target_ratio = img_resized.shape[0] / img.shape[0]
     ratio_h = ratio_w = 1 / target_ratio
@@ -106,14 +104,13 @@ def prepare_img_input_in_nhwc_format(request, name, path, resize_to_shape):
     # img =  cv2.imread(path)
     # img_resized = cv2.resize(img, dsize=(resize_to_shape, resize_to_shape), interpolation=cv2.INTER_LINEAR)
     # img_resized = img_resized.astype(np.float32)  # Convert to FP32
-
     # Normalize the image (if needed)
     target_ratio = img_resized.shape[0] / img.shape[0]
     ratio_h = ratio_w = 1 / target_ratio
     # preprocessing
     target_shape = (img_resized.shape[0], img_resized.shape[1])
     img_resized = img_resized.reshape(1, target_shape[0], target_shape[1], 3) # to NHWC
-    print(f"\Prepared input in NHWC, resize_to_shape:{resize_to_shape}, img_resized shape: {img_resized.shape}\n")
+    print(f"\nPrepared input in NHWC, resize_to_shape:{resize_to_shape}, img_resized shape: {img_resized.shape}\n")
     request.inputs[name].CopyFrom(make_tensor_proto(img_resized, shape=img_resized.shape))
     return ratio_h
 
@@ -179,16 +176,17 @@ if __name__ == "__main__":
     request = predict_pb2.PredictRequest()
     request.model_spec.name = args["pipeline_name"]
 
+    pp_start_time = start = time.time()
     if args["image_layout"] == "NCHW":
         prepare_img_input_in_nchw_format(request, args["image_input_name"], args["image_input_path"], (int(args["image_size"])))
     elif args["image_layout"] == "NHWC":
         prepare_img_input_in_nhwc_format(request, args["image_input_name"], args["image_input_path"], (int(args["image_size"])))
+    pproc_time = time.time() - pp_start_time
 
     try:
         start_time = time.time()
         response = stub.Predict(request, 30.0)
         exe_time = time.time() - start_time
-        print(f"Pipeline: {args['pipeline_name']} took {exe_time:.3f} seconds \n")
     except grpc.RpcError as err:
         if err.code() == grpc.StatusCode.ABORTED:
             print("No text has been found in the image")
@@ -196,6 +194,7 @@ if __name__ == "__main__":
         else:
             raise err
 
+    poproc_start_time = start = time.time()
     for name in response.outputs:
         print(f"Output: name[{name}]")
         tensor_proto = response.outputs[name]
@@ -205,3 +204,8 @@ if __name__ == "__main__":
             save_text_images_as_jpgs(output_nd, name, args["text_images_save_path"])
         if name == args["texts_output_name"]:
             text_recognition_output_to_text_deeptext(output_nd)
+    poproc_time = time.time() - poproc_start_time
+
+    print(f"\nPreprocessing Time (input prep): {pproc_time:.3f} sec")
+    print(f"Pipeline: {args['pipeline_name']} (CRAFT + craft_ocr custom node + STR): {exe_time:.3f} seconds")
+    print(f"Post processing time (decoding STR model output): {poproc_time:.3f} sec")
