@@ -1,11 +1,12 @@
-#  CRAFT Text Detection with Directed Acyclic Graph {#ovms_demo_optical_character_recognition}
+#  CRAFT Text Detection with Directed Acyclic Graph {#ovms_demo_craft_ocr}
 
 This document demonstrates how to create and use a text detection pipeline based on the
 [CRAFT](https://github.com/clovaai/CRAFT-pytorch) text detection model, combined with a custom node implementation to extract subimages of detected text, for further processing by a text recognition model.
 
-## Text Detection Graph
+## OCR Graph
 
-Below is depicted the graph implementing the text detection pipeline (TODO)
+Below is depicted the graph implementing the text detection pipeline:
+![image](craft_demo_graph.png)
 
 
 It includes the following nodes:
