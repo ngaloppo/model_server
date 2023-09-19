@@ -6,6 +6,7 @@ This document demonstrates how to create and use a text detection pipeline based
 ## OCR Graph
 
 Below is depicted the graph implementing the text detection pipeline:
+
 ![image](craft_demo_graph.png)
 
 
@@ -139,9 +140,11 @@ Output: name[text_images]
 With additional parameter `--text_images_save_path` the client script saves all detected text images to jpeg files into directory path to confirm if the image was analyzed correctly.
 
 Below is the exemplary input image.
+
 ![image](demo_images/input.jpg)
 
 The custom node generates the following text images retrieved from the original input to CRNN model:
+
 ![image](craft_table.jpg)
 
 We can also benchmark if needed using `rp_craft_ocr.py`:
