@@ -6,6 +6,7 @@ This document demonstrates how to create and use a text detection pipeline based
 ## Text Detection Graph
 
 Below is depicted the graph implementing the text detection pipeline:
+
 ![image](craft_demo_graph.png)
 
 It includes the following nodes:
