@@ -4,23 +4,18 @@
             "config": {
                 "name": "craft",
                 "base_path": "/OCR/craft_fp32",
-                "layout": "NHWC:NCHW",
+                "shape": {
+                  "input_0": "(1,3,768,768)"
+                },
                 "plugin_config": {
-                    "NUM_STREAMS": "8",
-                    "PERFORMANCE_HINT": "THROUGHPUT",
-                    "INFERENCE_PRECISION_HINT": "f32"
+                    "PERFORMANCE_HINT": "LATENCY"
                 }
             }
         },
         {
             "config": {
                 "name": "text-recognition",
-                "base_path": "/OCR/text-recognition",
-                "plugin_config": {
-                    "NUM_STREAMS": "8",
-                    "PERFORMANCE_HINT": "THROUGHPUT",
-                    "INFERENCE_PRECISION_HINT": "f32"
-                }
+                "base_path": "/OCR/text-recognition"
             }
         }
     ],
@@ -33,39 +28,35 @@
     "pipeline_config_list": [
         {
             "name": "detect_text_images",
-            "inputs": [
-                "image"
-            ],
+            "inputs": ["image"],
             "nodes": [
                 {
                     "name": "craft_node",
                     "model_name": "craft",
                     "type": "DL model",
                     "inputs": [
-                        {
-                            "input_0": {
-                                "node_name": "request",
-                                "data_item": "image"
-                            }
+                      {
+                        "input_0": {
+                          "node_name": "request",
+                          "data_item": "image"
                         }
+                      }
                     ],
                     "outputs": [
-                        {
-                            "data_item": "297",
-                            "alias": "scores"
-                        }
+                        {"data_item": "297",
+                         "alias": "scores"}
                     ]
                 },
                 {
                     "name": "extract_node",
                     "library_name": "craft_image_extractor",
                     "type": "custom",
-                    "demultiply_count": -1,
+                    "demultiply_count": 0,
                     "params": {
                         "original_image_width": "768",
                         "original_image_height": "768",
-                        "original_image_layout": "NHWC",
-                        "target_image_width": "100",
+                        "original_image_layout": "NCHW",
+                        "target_image_width": "128",
                         "target_image_height": "32",
                         "target_image_layout": "NCHW",
                         "convert_to_gray_scale": "true",
@@ -75,24 +66,14 @@
                         "debug": "false"
                     },
                     "inputs": [
-                        {
-                            "image": {
-                                "node_name": "request",
-                                "data_item": "image"
-                            }
-                        },
-                        {
-                            "scores": {
-                                "node_name": "craft_node",
-                                "data_item": "scores"
-                            }
-                        }
+                        {"image": {"node_name": "request",
+                                   "data_item": "image"}},
+                        {"scores": {"node_name": "craft_node",
+                                    "data_item": "scores"}}
                     ],
                     "outputs": [
-                        {
-                            "data_item": "text_images",
-                            "alias": "text_images"
-                        }
+                        {"data_item": "text_images",
+                         "alias": "text_images"}
                     ]
                 },
                 {
@@ -100,34 +81,20 @@
                     "model_name": "text-recognition",
                     "type": "DL model",
                     "inputs": [
-                        {
-                            "onnx::Sub_0": {
-                                "node_name": "extract_node",
-                                "data_item": "text_images"
-                            }
-                        }
+                        {"imgs": {"node_name": "extract_node",
+                            "data_item": "text_images"}}
                     ],
                     "outputs": [
-                        {
-                            "data_item": "3140",
-                            "alias": "texts"
-                        }
+                        {"data_item": "logits",
+                            "alias": "texts"}
                     ]
                 }
             ],
             "outputs": [
-                {
-                    "text_images": {
-                        "node_name": "extract_node",
-                        "data_item": "text_images"
-                    }
-                },
-                {
-                    "texts": {
-                        "node_name": "text-recognition_node",
-                        "data_item": "texts"
-                    }
-                }
+                {"text_images": {"node_name": "extract_node",
+                         "data_item": "text_images"}},
+                {"texts": {"node_name": "text-recognition_node",
+                         "data_item": "texts"}}
             ]
         }
     ]
