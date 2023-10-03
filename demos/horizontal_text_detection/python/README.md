@@ -69,7 +69,7 @@ ThreadID:   3; Current FPS:    30.30; Average FPS:    25.73; Average latency:   
 > **NOTE**: Video source is cropped to 704x704 resolution to match model input size.
 
 ## Recognize Detected Text with OCR Pipeline
-Optical Character Recognition (OCR) pipeline based on [horizontal text detection](https://docs.openvino.ai/2022.1/omz_models_model_horizontal_text_detection_0001.html) model, [text recognition](https://github.com/openvinotoolkit/open_model_zoo/tree/2022.1.0/models/intel/text-recognition-0014) 
+Optical Character Recognition (OCR) pipeline based on [horizontal text detection](https://docs.openvino.ai/2023.0/omz_models_model_horizontal_text_detection_0001.html) model, [text recognition](https://github.com/openvinotoolkit/open_model_zoo/tree/2022.1.0/models/intel/text-recognition-0014)
 combined with a custom node implementation can be used with the same python script used before. OCR pipeline provides location of detected text boxes on the image and additionally recognized text for each box.
 
 ![horizontal text detection using OCR pipeline](horizontal-text-detection-ocr.gif)
@@ -77,7 +77,7 @@ combined with a custom node implementation can be used with the same python scri
 ### Prepare workspace to run the demo
 
 To successfully deploy OCR pipeline you need to have a workspace that contains:
-- [horizontal text detection](https://docs.openvino.ai/2022.1/omz_models_model_horizontal_text_detection_0001.html) and [text recognition](https://github.com/openvinotoolkit/open_model_zoo/tree/2022.1.0/models/intel/text-recognition-0014) models
+- [horizontal text detection](https://docs.openvino.ai/2023.0/omz_models_model_horizontal_text_detection_0001.html) and [text recognition](https://github.com/openvinotoolkit/open_model_zoo/tree/2022.1.0/models/intel/text-recognition-0014) models
 - Custom node for image processing
 - Configuration file
 
@@ -197,7 +197,7 @@ ffmpeg -f dshow -i video="HP HD Camera" -f rtsp -rtsp_transport tcp rtsp://local
 ```
 
 ```bash
-docker build . -t rtsp_client
+docker build ../../common/stream_client/ -t rtsp_client
 ```
 
 ### Start the client
@@ -205,7 +205,7 @@ docker build . -t rtsp_client
 - Command
 
 ```bash
-docker run rtsp_client --help
+docker run -v $(pwd):/workspace rtsp_client --help
 usage: rtsp_client.py [-h] [--grpc_address GRPC_ADDRESS]
                       [--input_stream INPUT_STREAM]
                       [--output_stream OUTPUT_STREAM]
@@ -233,7 +233,7 @@ options:
 - Usage example
 
 ```bash
-docker run rtsp_client --grpc_address localhost:9000 --input_stream 'rtsp://localhost:8080/channel1' --output_stream 'rtsp://localhost:8080/channel2'
+docker run -v $(pwd):/workspace rtsp_client --grpc_address localhost:9000 --input_stream 'rtsp://localhost:8080/channel1' --output_stream 'rtsp://localhost:8080/channel2'
 ```
 
 Then read rtsp stream using ffplay

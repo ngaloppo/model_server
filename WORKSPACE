@@ -89,7 +89,7 @@ http_archive(
 git_repository(
     name = "mediapipe",
     remote = "https://github.com/openvinotoolkit/mediapipe",
-    commit = "7e87234cc8ddec5430d16eb0ea50fa3dc6c216ec", # Add support for dynamic shapes in OVMS Adapter (#14)
+    commit = "576df1403d2861d3308d229ff0e2f31c4d7277c9", # Fix tensors handling (#34)
 )
 
 # DEV mediapipe 1 source - adjust local repository path for build
@@ -173,6 +173,34 @@ new_local_repository(
 
 ########################################################### Mediapipe end
 
+########################################################### Python support start
+
+load("@//third_party/python:python_repo.bzl", "python_repository")
+python_repository(name = "_python3-linux")
+
+new_local_repository(
+    name = "python3_linux",
+    path = "/usr",
+    build_file = "@_python3-linux//:BUILD"
+)
+
+http_archive(
+  name = "pybind11_bazel",
+  strip_prefix = "pybind11_bazel-b162c7c88a253e3f6b673df0c621aca27596ce6b",
+  urls = ["https://github.com/pybind/pybind11_bazel/archive/b162c7c88a253e3f6b673df0c621aca27596ce6b.zip"],
+)
+# We still require the pybind library.
+http_archive(
+  name = "pybind11",
+  build_file = "@pybind11_bazel//:pybind11.BUILD",
+  strip_prefix = "pybind11-2.10.4",
+  urls = ["https://github.com/pybind/pybind11/archive/v2.10.4.tar.gz"],
+)
+load("@pybind11_bazel//:python_configure.bzl", "python_configure")
+python_configure(name = "local_config_python")
+
+########################################################### Python support end
+
 # minitrace
 new_git_repository(
     name = "minitrace",
@@ -190,12 +218,36 @@ cc_library(
 """,
 )
 
-load("@tensorflow_serving//tensorflow_serving:repo.bzl", "tensorflow_http_archive")
-tensorflow_http_archive(
+#load("@tensorflow_serving//tensorflow_serving:repo.bzl", "tensorflow_http_archive")
+#tensorflow_http_archive(
+#    name = "org_tensorflow",
+#    sha256 = "fd687f8e26833cb917ae0bd8e434c9bd30c92042361c8ae69679983d3c66a440",
+#    git_commit = "15198b1818bd2bf1b5b55bf5b02bf42398d222fc",
+#    patch = "tf.patch",
+#    repo_mapping = {"@curl" : "@curl"}
+#)
+
+# TensorFlow repo should always go after the other external dependencies.
+# TF on 2022-08-10.
+_TENSORFLOW_GIT_COMMIT = "af1d5bc4fbb66d9e6cc1cf89503014a99233583b"
+_TENSORFLOW_SHA256 = "f85a5443264fc58a12d136ca6a30774b5bc25ceaf7d114d97f252351b3c3a2cb"
+http_archive(
     name = "org_tensorflow",
-    sha256 = "fd687f8e26833cb917ae0bd8e434c9bd30c92042361c8ae69679983d3c66a440",
-    git_commit = "15198b1818bd2bf1b5b55bf5b02bf42398d222fc",
-    patch = "tf.patch",
+    urls = [
+      "https://github.com/tensorflow/tensorflow/archive/%s.tar.gz" % _TENSORFLOW_GIT_COMMIT,
+    ],
+    patches = [
+        "@mediapipe//third_party:org_tensorflow_compatibility_fixes.diff",
+        # Diff is generated with a script, don't update it manually.
+        "@mediapipe//third_party:org_tensorflow_custom_ops.diff",
+        "tf.patch",
+        "tf_graph_info_multilinecomment.patch",
+    ],
+    patch_args = [
+        "-p1",
+    ],
+    strip_prefix = "tensorflow-%s" % _TENSORFLOW_GIT_COMMIT,
+    sha256 = _TENSORFLOW_SHA256,
     repo_mapping = {"@curl" : "@curl"}
 )
 

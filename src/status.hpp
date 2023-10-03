@@ -190,7 +190,6 @@ enum class StatusCode {
     REST_UNSUPPORTED_PRECISION,                   /*!< Unsupported conversion from tensor_content to _val container */
     REST_SERIALIZE_TENSOR_CONTENT_INVALID_SIZE,   /*!< Size of data in tensor_content does not match declared tensor shape */
     REST_SERIALIZE_VAL_FIELD_INVALID_SIZE,        /*!< Number of elements in xxx_val field does not match declared tensor shape */
-    REST_SERIALIZE_NO_DATA,                       /*!< No data found in tensor_content or xxx_val field matching tensor dtype */
     REST_BINARY_DATA_SIZE_PARAMETER_INVALID,      /*!< binary_data_size parameter is invalid and cannot be parsed*/
     REST_INFERENCE_HEADER_CONTENT_LENGTH_INVALID, /*!< inferenceHeaderContentLength parameter is invalid and cannot be parsed*/
     REST_BINARY_BUFFER_EXCEEDED,                  /*!< Received buffer size is smaller than binary_data_size parameter indicates*/
@@ -237,6 +236,7 @@ enum class StatusCode {
     PIPELINE_INPUTS_AMBIGUOUS_METADATA,
 
     // Mediapipe
+    MEDIAPIPE_DESERIALIZATION_ERROR,
     MEDIAPIPE_GRAPH_CONFIG_FILE_INVALID,
     MEDIAPIPE_GRAPH_INITIALIZATION_ERROR,
     MEDIAPIPE_GRAPH_ADD_OUTPUT_STREAM_ERROR,
@@ -249,10 +249,12 @@ enum class StatusCode {
     MEDIAPIPE_DEFINITION_NOT_LOADED_YET,
     MEDIAPIPE_KFS_PASS_WRONG_INPUT_STREAM_COUNT,
     MEDIAPIPE_WRONG_INPUT_STREAM_PACKET_NAME,
+    MEDIAPIPE_WRONG_INPUT_SIDE_PACKET_STREAM_PACKET_NAME,
     MEDIAPIPE_KFS_PASS_WRONG_OUTPUT_STREAM_COUNT,
     MEDIAPIPE_WRONG_OUTPUT_STREAM_PACKET_NAME,
     MEDIAPIPE_KFS_PASSTHROUGH_MISSING_OUTPUT_RESPONSE_TAG,
     MEDIAPIPE_KFS_PASSTHROUGH_MISSING_INPUT_REQUEST_TAG,
+    MEDIAPIPE_GRAPH_NAME_OCCUPIED,
 
     // Custom Loader
     CUSTOM_LOADER_LIBRARY_INVALID,

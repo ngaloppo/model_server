@@ -51,13 +51,14 @@ NVIDIA ?=0
 GPU ?= 0
 BUILD_NGINX ?= 0
 MEDIAPIPE_DISABLE ?= 0
+PYTHON_DISABLE ?= 1
 FUZZER_BUILD ?= 0
 
 # NOTE: when changing any value below, you'll need to adjust WORKSPACE file by hand:
 #         - uncomment source build section, comment binary section
 #         - adjust binary version path - version variable is not passed to WORKSPACE file!
-OV_SOURCE_BRANCH ?= 8509737d0ae6a222f69d2eadd582fc0ee419b341  # 15.08.2023
-OV_CONTRIB_BRANCH ?= 878e80fae9a40d9e4f61c663e304d0f0be71498e  # 15.08.2023
+OV_SOURCE_BRANCH ?= 47b736f63edda256d66e2bbb572f42a9d6549f6e  # 04.09.2023
+OV_CONTRIB_BRANCH ?= 878e80fae9a40d9e4f61c663e304d0f0be71498e  # 14.08.2023 (top of releases/2023/1 as of 06.09.2023)
 
 OV_SOURCE_ORG ?= openvinotoolkit
 OV_CONTRIB_ORG ?= openvinotoolkit
@@ -75,6 +76,12 @@ DISABLE_MEDIAPIPE_PARAMS ?= ""
 ifeq ($(MEDIAPIPE_DISABLE),1)
 	DISABLE_MEDIAPIPE_PARAMS = " --define MEDIAPIPE_DISABLE=1 --cxxopt=-DMEDIAPIPE_DISABLE=1"
 endif
+
+DISABLE_PYTHON_PARAMS ?= ""
+ifeq ($(PYTHON_DISABLE),1)
+	DISABLE_PYTHON_PARAMS = " --define PYTHON_DISABLE=1 --cxxopt=-DPYTHON_DISABLE=1"
+endif
+
 FUZZER_BUILD_PARAMS ?= ""
 ifeq ($(FUZZER_BUILD),1)
 	FUZZER_BUILD_PARAMS = " --define FUZZER_BUILD=1 --cxxopt=-DFUZZER_BUILD=1"
@@ -93,7 +100,7 @@ else
   MINITRACE_FLAGS=""
 endif
 
-BAZEL_DEBUG_FLAGS="--strip=$(STRIP)"$(BAZEL_DEBUG_BUILD_FLAGS)$(DISABLE_MEDIAPIPE_PARAMS)$(FUZZER_BUILD_PARAMS)
+BAZEL_DEBUG_FLAGS="--strip=$(STRIP)"$(BAZEL_DEBUG_BUILD_FLAGS)$(DISABLE_MEDIAPIPE_PARAMS)$(DISABLE_PYTHON_PARAMS)$(FUZZER_BUILD_PARAMS)
 
 
 
@@ -113,10 +120,10 @@ ifeq ($(BASE_OS),ubuntu)
   endif
   ifeq ($(BASE_OS_TAG_UBUNTU),20.04)
 	INSTALL_DRIVER_VERSION ?= "22.43.24595"
-	DLDT_PACKAGE_URL ?= http://s3.toolbox.iotg.sclab.intel.com/ov-packages/l_openvino_toolkit_ubuntu20_2023.1.0.12092.8509737d0ae_x86_64.tgz
+	DLDT_PACKAGE_URL ?= http://s3.toolbox.iotg.sclab.intel.com/ov-packages/l_openvino_toolkit_ubuntu20_2023.1.0.12185.9e6b00e51cd_x86_64.tgz
   else ifeq  ($(BASE_OS_TAG_UBUNTU),22.04)
-	INSTALL_DRIVER_VERSION ?= "23.13.26032"
-	DLDT_PACKAGE_URL ?= http://s3.toolbox.iotg.sclab.intel.com/ov-packages/l_openvino_toolkit_ubuntu22_2023.1.0.12092.8509737d0ae_x86_64.tgz
+	INSTALL_DRIVER_VERSION ?= "23.22.26516"
+	DLDT_PACKAGE_URL ?= http://s3.toolbox.iotg.sclab.intel.com/ov-packages/l_openvino_toolkit_ubuntu22_2023.1.0.12185.9e6b00e51cd_x86_64.tgz
   endif
 endif
 ifeq ($(BASE_OS),redhat)
@@ -129,8 +136,8 @@ ifeq ($(BASE_OS),redhat)
 	BASE_IMAGE_RELEASE=registry.access.redhat.com/ubi8/ubi-minimal:$(BASE_OS_TAG_REDHAT)
   endif	
   DIST_OS=redhat
-  INSTALL_DRIVER_VERSION ?= "22.43.24595"
-  DLDT_PACKAGE_URL ?= http://s3.toolbox.iotg.sclab.intel.com/ov-packages/l_openvino_toolkit_rhel8_2023.1.0.12092.8509737d0ae_x86_64.tgz
+  INSTALL_DRIVER_VERSION ?= "23.22.26516"
+  DLDT_PACKAGE_URL ?= http://s3.toolbox.iotg.sclab.intel.com/ov-packages/l_openvino_toolkit_rhel8_2023.1.0.12185.9e6b00e51cd_x86_64.tgz
 endif
 
 OVMS_CPP_DOCKER_IMAGE ?= openvino/model_server
@@ -250,6 +257,11 @@ clang-format-check: clang-format
 .PHONY: docker_build
 docker_build: ovms_builder_image targz_package ovms_release_images
 ovms_builder_image:
+ifeq ($(PYTHON_DISABLE),0)
+  ifeq ($(MEDIAPIPE_DISABLE),1)
+	@echo "Cannot build model server with Python support without building with Mediapipe enabled. Use 'MEDIAPIPE_DISABLE=0 PYTHON_DISABLE=0 make docker_build'"; exit 1 ;
+  endif
+endif
 ifeq ($(CHECK_COVERAGE),1)
   ifeq ($(RUN_TESTS),0)
 	@echo "Cannot test coverage without running tests. Use 'CHECK_COVERAGE=1 RUN_TESTS=1 make docker_build'"; exit 1 ;
