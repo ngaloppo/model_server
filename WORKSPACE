@@ -89,7 +89,7 @@ http_archive(
 git_repository(
     name = "mediapipe",
     remote = "https://github.com/openvinotoolkit/mediapipe",
-    commit = "e45601452e53f2afca9fbd18c2f303b034ec21f1", # Static analysis #2 (#29)
+    commit = "576df1403d2861d3308d229ff0e2f31c4d7277c9", # Fix tensors handling (#34)
 )
 
 # DEV mediapipe 1 source - adjust local repository path for build
@@ -172,6 +172,34 @@ new_local_repository(
 )
 
 ########################################################### Mediapipe end
+
+########################################################### Python support start
+
+load("@//third_party/python:python_repo.bzl", "python_repository")
+python_repository(name = "_python3-linux")
+
+new_local_repository(
+    name = "python3_linux",
+    path = "/usr",
+    build_file = "@_python3-linux//:BUILD"
+)
+
+http_archive(
+  name = "pybind11_bazel",
+  strip_prefix = "pybind11_bazel-b162c7c88a253e3f6b673df0c621aca27596ce6b",
+  urls = ["https://github.com/pybind/pybind11_bazel/archive/b162c7c88a253e3f6b673df0c621aca27596ce6b.zip"],
+)
+# We still require the pybind library.
+http_archive(
+  name = "pybind11",
+  build_file = "@pybind11_bazel//:pybind11.BUILD",
+  strip_prefix = "pybind11-2.10.4",
+  urls = ["https://github.com/pybind/pybind11/archive/v2.10.4.tar.gz"],
+)
+load("@pybind11_bazel//:python_configure.bzl", "python_configure")
+python_configure(name = "local_config_python")
+
+########################################################### Python support end
 
 # minitrace
 new_git_repository(

@@ -191,12 +191,13 @@ const std::unordered_map<const StatusCode, const std::string> Status::statusMess
     {StatusCode::PIPELINE_INPUTS_AMBIGUOUS_METADATA, "Multiple nodes connected to the same pipeline input require different tensor metadata"},
 
     // Mediapipe
+    {StatusCode::MEDIAPIPE_DESERIALIZATION_ERROR, "Failed to deserialize tensor for mediapipe graph"},
     {StatusCode::MEDIAPIPE_GRAPH_START_ERROR, "Failed to start mediapipe graph"},
     {StatusCode::MEDIAPIPE_GRAPH_CONFIG_FILE_INVALID, "Failed to read protobuf graph configuration file"},
     {StatusCode::MEDIAPIPE_GRAPH_INITIALIZATION_ERROR, "Failed to initalize mediapipe graph"},
     {StatusCode::MEDIAPIPE_GRAPH_ADD_OUTPUT_STREAM_ERROR, "Failed to add mediapipe graph output stream"},
     {StatusCode::MEDIAPIPE_GRAPH_CLOSE_INPUT_STREAM_ERROR, "Failed to close mediapipe graph input stream"},
-    {StatusCode::MEDIAPIPE_GRAPH_ADD_PACKET_INPUT_STREAM, "Failed to add packet to mediapipe graph input stream"},  // TODO add http/gRPC conversions for retCodes of Mediapipe
+    {StatusCode::MEDIAPIPE_GRAPH_ADD_PACKET_INPUT_STREAM, "Failed to add packet to mediapipe graph input stream"},
     {StatusCode::MEDIAPIPE_DEFINITION_NAME_MISSING, "Model with requested name is not found"},
     {StatusCode::MEDIAPIPE_EXECUTION_ERROR, "Mediapipe execution failed. MP status"},
     {StatusCode::MEDIAPIPE_DEFINITION_NOT_LOADED_ANYMORE, "Mediapipe is retired"},
@@ -208,6 +209,7 @@ const std::unordered_map<const StatusCode, const std::string> Status::statusMess
     {StatusCode::MEDIAPIPE_WRONG_OUTPUT_STREAM_PACKET_NAME, "Mediapipe unexpected output stream packets name"},
     {StatusCode::MEDIAPIPE_KFS_PASSTHROUGH_MISSING_OUTPUT_RESPONSE_TAG, "Mediapipe KFS pass through graph is missing RESPONSE: string in the output name"},
     {StatusCode::MEDIAPIPE_KFS_PASSTHROUGH_MISSING_INPUT_REQUEST_TAG, "Mediapipe KFS pass through graph is missing REQUEST: string in the input name"},
+    {StatusCode::MEDIAPIPE_GRAPH_NAME_OCCUPIED, "Given mediapipe graph name is already occupied"},
 
     // Storage errors
     // S3
