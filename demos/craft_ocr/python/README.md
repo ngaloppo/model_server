@@ -1,17 +1,18 @@
-#  CRAFT Text Detection with Directed Acyclic Graph {#ovms_demo_optical_character_recognition}
+#  CRAFT Text Detection with Directed Acyclic Graph {#ovms_demo_craft_ocr}
 
 This document demonstrates how to create and use a text detection pipeline based on the
-[CRAFT](https://github.com/clovaai/CRAFT-pytorch) text detection model, combined with a custom node implementation to extract subimages of detected text, for further processing by a text recognition model: [STR](https://github.com/ravi9/deep-text-recognition-benchmark/tree/master).
+[CRAFT](https://github.com/clovaai/CRAFT-pytorch) text detection model, combined with a custom node implementation to extract sub-images of detected text, for further processing by a text recognition model: [STR](https://github.com/ravi9/deep-text-recognition-benchmark/tree/master).
 
 ## Text Detection Graph
 
-Below is depicted the graph implementing the text detection pipeline (TODO)
+Below is depicted the graph implementing the text detection pipeline:
+![image](craft_demo_graph.png)
 
 It includes the following nodes:
 
-1. Model **CRAFT** ([LINK](https://github.com/ngaloppo/CRAFT-pytorch)) - inference execution which takes the user image as input. It returns one outputs that combines two score maps: a text score map and a character link score map. 
+1. Model **CRAFT** ([LINK](https://github.com/ngaloppo/CRAFT-pytorch)) - inference execution which takes the user image as input. It returns one output that combines two score maps: a text score map and a character link score map.
 
-1. Custom node craft_ocr - it includes the C++ implementation of CRAFT model results post-processing. It analyses the score maps based on the configurable text and link score level thresholds and predicts text regions (bounding boxes) based on these score maps. The custom node craft_ocr crops all detected boxes from the original image, resize them to the target resolution and combines into a single output of a dynamic batch size. The output batch size is determined by the number of detected boxes according to the configured criteria. All operations on the images employ OpenCV libraries which are preinstalled in the OVMS. Learn more about the [craft_ocr custom node](/src/custom_nodes/craft_ocr)
+1. Custom node craft_ocr - it includes the C++ implementation of CRAFT model results post-processing. It analyses the score maps based on the configurable text and link score level thresholds and predicts text regions (bounding boxes) based on these score maps. The custom node craft_ocr crops all detected boxes from the original image, resizes them to the target resolution, and combines them into a single output of a dynamic batch size. The output batch size is determined by the number of detected boxes according to the configured criteria. All operations on the images employ OpenCV libraries which are preinstalled in the OVMS. Learn more about the [craft_ocr custom node](/src/custom_nodes/craft_ocr)
 
 1. Model **Scene Text Recognition** ([LINK](https://github.com/ravi9/deep-text-recognition-benchmark/tree/master)): There are four stages in the text recognition model.  (1) Transformation: Applies thin-plate spline (TPS) transformation to normalize the input text image into a standardized view. This helps ease downstream processing. (2) Feature Extraction: Uses a deep residual network (ResNET) to extract visual features from the input image. The goal is to focus on attributes relevant for character recognition. (3) Sequence Modeling: Employs a bidirectional LSTM (BiLSTM) on top of the visual features to model the sequential context and dependencies between characters. This provides robustness for predicting each character. (4) Prediction: Uses an attention-based (Attn) decoder to predict the output character sequence. The attention mechanism allows implicitly learning character-level language models to aid prediction.
 
@@ -20,17 +21,22 @@ It includes the following nodes:
 
 ## Preparing the Models
 
-### Create a working directory
+### 0. Create a working directory and setup a Python Virtual environment
 
-Create a working directory for easy organization as we will create multiple folders and models.
+- Create a working directory for easy organization as we will create multiple folders and models.
+- Create a Python Virtual Environment with Python VENV or conda. Here we are using venv. Make sure Python >=3.8
 ```bash
 mkdir ~/craft-ocr-demo
 cd  ~/craft-ocr-demo
+
+#  Make  sure Python >=3.8
+python3 -m venv craft-ocr-venv
+source craft-ocr-venv/bin/activate
 ```
 
 ### 1. CRAFT Model
 
-The original pretrained model for CRAFT topology is stored [here](https://drive.google.com/open?id=1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ) in Pytorch format, as instructed in the [CRAFT README](https://github.com/clovaai/CRAFT-pytorch/blob/master/README.md).
+The original pre-trained model for CRAFT topology is stored [here](https://drive.google.com/open?id=1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ) in Pytorch format, as instructed in the [CRAFT README](https://github.com/clovaai/CRAFT-pytorch/blob/master/README.md).
 
 Clone our fork of the CRAFT GitHub repository:
 
@@ -39,28 +45,27 @@ cd  ~/craft-ocr-demo
 git clone https://github.com/ngaloppo/CRAFT-pytorch
 cd CRAFT-pytorch
 git checkout openvino
+# Assuming craft-ocr-venv is activated as shown in Step 0.
+pip install -r requirements.txt
 ```
 
-Download the file `craft_mlt_25k.pth` as instructed above. Then, export to
+Download the file [`craft_mlt_25k.pth`](https://drive.google.com/open?id=1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ) as instructed above. Then, export to
 OpenVINO format with the provided export script:
 
 ```bash
-pip -m venv craft
-source craft/bin/activate
-pip install -r requirements.txt
 python export.py craft_mlt_25k.pth
 ```
-This will create two files called `craft.xml` and `craft.bin` in the same folder. 
+This will create two files called `craft.xml` and `craft.bin` in the same folder.
 
-Converted CRAFT model will have the following interface:
+The converted CRAFT model will have the following interface:
 - Input name: `input_images` ; shape: `[1 3 ? ?]` ; precision: `FP32` ; layout: `NCHW`
 - Output name: `297` ; shape: `[1 ? ? 2]` ; precision: `FP32` ; layout: `N...`
 
 
-### 2. Building the Custom Node "craft_ocr" Library 
+### 2. Building the Custom Node "craft_ocr" Library
 
-Custom nodes are loaded into OVMS as dynamic library implementing OVMS API from [custom_node_interface.h](https://github.com/openvinotoolkit/model_server/blob/releases/2022/1/src/custom_node_interface.h).
-It can use OpenCV libraries included in OVMS or it could use other thirdparty components.
+Custom nodes are loaded into OVMS as a dynamic library implementing OVMS API from [custom_node_interface.h](https://github.com/openvinotoolkit/model_server/blob/releases/2022/1/src/custom_node_interface.h).
+It can use OpenCV libraries included in OVMS or it could use other third party components.
 
 The custom node `craft_ocr` can be built inside a docker container via the following procedure:
 - go to the directory with custom node examples [src/custom_nodes](../../../src/custom_nodes/). The implementation is in [src/custom_nodes/craft_ocr](../../../src/custom_nodes/craft_ocr/).
@@ -81,17 +86,12 @@ This command will export the compiled library in `./lib` folder: `model_server/s
 
 
 ### 3. Scene Text Recognition (STR) Model
-The original pretrained STR model is stored here in Pytorch format, as instructed in the [STR README](https://github.com/ravi9/deep-text-recognition-benchmark/blob/dev/README.md#run-demo-with-pretrained-model). Here we are using the [TPS-ResNet-BiLSTM-Attn.pth](https://drive.google.com/file/d/1b59rXuGGmKne1AuHnkgDzoYgKeETNMv9/view?usp=drive_link) 
+The original pre-trained STR model is stored here in Pytorch format, as instructed in the [STR README](https://github.com/ravi9/deep-text-recognition-benchmark/blob/dev/README.md#run-demo-with-pretrained-model). Here we are using the [TPS-ResNet-BiLSTM-Attn.pth](https://drive.google.com/file/d/1b59rXuGGmKne1AuHnkgDzoYgKeETNMv9/view?usp=drive_link)
 
 Clone our fork of the STR GitHub repository and export the model to IR. See [README-OpenVINO](https://github.com/ravi9/deep-text-recognition-benchmark/blob/master/README-OpenVINO.md).
 
 ```bash
-source deactivate # from craft venv created before.
-
-# Install Python 3.8 in a virtual environment (e.g. using pyenv or conda).
-conda create -n deeptext python=3.8 -y
-#  After installing, activate conda env
-conda activate deeptext
+# Assuming craft-ocr-venv is activated as shown in Step 0.
 
 # Git clone repo
 cd  ~/craft-ocr-demo
@@ -99,15 +99,20 @@ git clone https://github.com/ravi9/deep-text-recognition-benchmark.git
 cd deep-text-recognition-benchmark
 
 # install requirements:
-pip install openvino-dev[pytorch,onnx]==2023.0.1
+pip install openvino-dev[pytorch,onnx]
 pip install lmdb pillow torchvision nltk natsort
 
-# Export Models
+# Export Models.
+# Download the PyTorch model (TPS-ResNet-BiLSTM-Attn.pth) as described above. See STR README.
+
 # To export models for OVMS:
-python export_to_ov_ir.py --output_dir models-exported-ovms --ovms
+python export_to_ov_ir.py \
+--saved_model TPS-ResNet-BiLSTM-Attn.pth \
+--output_dir models-exported-ovms \
+--ovms
 
 # To export models to use with demo_ov.py
-python export_to_ov_ir.py
+python export_to_ov_ir.py --saved_model TPS-ResNet-BiLSTM-Attn.pth
 
 ```
 
@@ -116,7 +121,7 @@ python export_to_ov_ir.py
 Create a folder called `OCR`, and place the model files and custom node library in a folder structure with the following commands:
 
 ```bash
-# Go to your your working directory root, so that all the recent git clone folders are visible.
+# Go to your working directory root, so that all the recent git clone folders are visible.
 cd  ~/craft-ocr-demo
 ls -l
 
@@ -171,7 +176,7 @@ OCR
 
 ## Deploying OVMS
 
-Deploy OVMS with OCR demo pipeline using the following command:
+Deploy OVMS with the OCR demo pipeline using the following command:
 
 ```bash
 cd  ~/craft-ocr-demo
@@ -198,10 +203,11 @@ cd model_server/demos/craft_ocr/python
 
 Install python dependencies:
 ```bash
+# Assuming craft-ocr-venv is activated as shown in Step 0.
 pip3 install -r requirements.txt
-``` 
+```
 
-Now you can create a output directory for text images and run the client. With additional parameter `--text_images_save_path` the client script saves all detected text images to jpeg files into directory path to confirm if the image was analyzed correctly.
+Now you can create an output directory for text images and run the client. With the additional parameter `--text_images_save_path` the client script saves all detected text images to jpeg files into the directory path to confirm if the image was analyzed correctly.
 
 ```bash
 mkdir results
@@ -319,7 +325,7 @@ List available Models on OVMS
 docker run --rm --network host benchmark_client -a localhost -r 30002 --list_models
 ```
 
-Run benchmark client. There will be a lot of console output. 
+Run benchmark client. There will be a lot of console output.
 
 - For FPS, see `worker: window_brutto_frame_rate`.
 - For mean latency, see `worker: window_mean_latency`.
