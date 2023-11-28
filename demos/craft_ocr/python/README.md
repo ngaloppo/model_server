@@ -3,6 +3,10 @@
 This document demonstrates how to create and use a text detection pipeline based on the
 [CRAFT](https://github.com/clovaai/CRAFT-pytorch) text detection model, combined with a custom node implementation to extract sub-images of detected text, for further processing by a text recognition model: [STR](https://github.com/ravi9/deep-text-recognition-benchmark/tree/master).
 
+Following are the forked repos with OpenVINO integration which we use in this demo:
+- [OpenVINO CRAFT REPO LINK](https://github.com/ngaloppo/CRAFT-pytorch/tree/openvino)
+- [OpenVINO STR REPO LINK](https://github.com/ravi9/deep-text-recognition-benchmark/blob/master/README-OpenVINO.md)
+
 ## Text Detection Graph
 
 Below is depicted the graph implementing the text detection pipeline:
@@ -39,7 +43,7 @@ source craft-ocr-venv/bin/activate
 
 The original pre-trained model for CRAFT topology is stored [here](https://drive.google.com/open?id=1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ) in Pytorch format, as instructed in the [CRAFT README](https://github.com/clovaai/CRAFT-pytorch/blob/master/README.md).
 
-Clone our fork of the CRAFT GitHub repository:
+Clone our fork of the [CRAFT GitHub repository](https://github.com/ngaloppo/CRAFT-pytorch/tree/openvino):
 
 ```bash
 cd  ~/craft-ocr-demo
